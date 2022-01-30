@@ -1,14 +1,17 @@
 package flaky
 
 import java.io.File
-
 import flaky.FlakyPlugin._
+import cats.implicits._
 import flaky.report.TextReport
 import sbt._
+import sbt.internal.util.complete.Parser
 
 object FlakyCommand {
 
-  def flaky: Command = Command("flaky")(parser) {
+  import sbt.complete.DefaultParsers._
+
+  def flaky: Command = Command("flaky")(_ => conditionParser ~ testCaseParser) {
     (state, args) =>
       val targetDir = Project.extract(state).get(Keys.target)
       val baseDirectory = Project.extract(state).get(Keys.baseDirectory)
@@ -16,29 +19,29 @@ object FlakyCommand {
 
       val testReports = new File(targetDir, "test-reports")
       val flakyReportsDir = new File(targetDir, Project.extract(state).get(autoImport.flakyReportsDir))
-      val flakyReportsDirHtml = new File(targetDir, Project.extract(state).get(autoImport.flakyHtmlReportDir))
       val logFiles = Project.extract(state).get(autoImport.flakyAdditionalFiles)
       val logLevelInTask = Project.extract(state).get(autoImport.flakyLogLevelInTask)
-      val taskKeys: Seq[TaskKey[Unit]] = Project.extract(state).get(autoImport.flakyTask)
-      val htmlReportsUrl = Project.extract(state).get(autoImport.flakyHtmlReportUrl)
-      val detailedSlackReport = Project.extract(state).get(autoImport.flakySlackDetailedReport)
+      val testKeys: Seq[TaskKey[Unit]] = Project.extract(state).get(autoImport.flakyTask)
+      val testOnlyKeys: Seq[InputKey[Unit]] = Project.extract(state).get(autoImport.flakyTaskByName)
       val moveFilesF = moveFiles(flakyReportsDir, testReports, logFiles) _
 
       def runTasks(state: State, runIndex: Int): Unit = {
-        taskKeys.foreach { taskKey =>
+        testKeys.foreach { taskKey =>
           val extracted = Project extract state
           import extracted._
           import sbt.Keys.logLevel
           val newState = append(Seq(logLevel in taskKey := logLevelInTask), state)
           Project.runTask(taskKey, newState, checkCycles = true)
         }
-        if (Flaky.isFailed(testReports)) {
-          val flakyReport = Flaky.processFolder(testReports)
-          flakyReport
-            .filter(_.failureDetails.nonEmpty)
-            .foreach(ft => state.log.error(s"${scala.Console.RED}Failed ${ft.test.clazz}:${ft.test.test} [${ft.time}s]"))
+      }
+
+      def runInputTasks(state: State, regex: String): Unit = {
+        testOnlyKeys.toList.foldLeft(state) {
+          case (state, key) =>
+            val extracted = Project.extract(state)
+            extracted.runInputTask(key, regex, state)
+              ._1
         }
-        moveFilesF(runIndex)
       }
 
       state.log.info(s"Executing flaky command")
@@ -46,19 +49,23 @@ object FlakyCommand {
       val start = System.currentTimeMillis
 
       val iterationNames = args match {
-        case Times(count) =>
+        case (Times(count), tc) =>
           val inclusive = 1 to count
           for (i <- inclusive) {
-            runTasks(state, i)
+
             val timeReport = TimeReport(i, System.currentTimeMillis - start)
             state.log.info(s"${scala.Console.GREEN}Test iteration $i finished. ETA: ${timeReport.estimate(count - i)}${scala.Console.RESET}")
           }
           inclusive.map(_.toString).toList
-        case Duration(minutes) =>
+        case (Duration(minutes), tc) =>
           var i = 1
           val end = start + minutes.toLong * 60 * 1000
           while (System.currentTimeMillis < end) {
-            runTasks(state, i)
+            tc match {
+              case ByName(name) => runInputTasks(state, name)
+              case All => runTasks(state, i)
+            }
+
             val timeReport = TimeReport(i, System.currentTimeMillis - start)
             val timeLeft = end - System.currentTimeMillis
             val formattedSeconds = TimeReport.formatSeconds(timeLeft / 1000)
@@ -66,11 +73,14 @@ object FlakyCommand {
             i = i + 1
           }
           (1 to i).map(_.toString).toList
-        case FirstFailure =>
+        case (FirstFailure, tc) =>
           var i = 1
           var foundFail = false
           while (!foundFail) {
-            runTasks(state, i)
+            tc match {
+              case ByName(name) => runInputTasks(state, name)
+              case All => runTasks(state, i)
+            }
             if (Flaky.isFailed(testReports)) {
               foundFail = true
             }
@@ -79,11 +89,16 @@ object FlakyCommand {
           (1 to i).map(_.toString).toList
       }
 
+      val testCases = args._2 match {
+        case ByName(name) => ???
+        case All => ???
+      }
+
       val name: String = Project.extract(state).get(sbt.Keys.name)
       val report: FlakyTestReport = Flaky.createReport(name, TimeDetails(start, System.currentTimeMillis()), iterationNames, flakyReportsDir)
 
 
-      textReport(baseDirectory, flakyReportsDir, report,  state.log)
+      textReport(baseDirectory, flakyReportsDir, report, state.log)
 
 
       state
@@ -98,9 +113,7 @@ object FlakyCommand {
   }
 
 
-
-
-  private def parser(state: State) = {
+  private def conditionParser: Parser[ConditionArgs] = {
     import sbt.complete.DefaultParsers._
     val times = (Space ~> "times=" ~> NatBasic)
       .examples("times=5", "times=25", "times=100")
@@ -114,6 +127,20 @@ object FlakyCommand {
     times | duration | firstFailure
   }
 
+
+  private def testCaseParser: Parser[TestCaseArgs] = {
+    import sbt.complete.DefaultParsers._
+    val all = (Space ~> "all")
+      .examples("all")
+      .map(_ => All)
+
+    val byName = (Space ~> "byName" ~> StringBasic)
+      .examples("byName=*MyTestSpec")
+      .map(s => ByName(s))
+
+    byName | all
+  }
+
   private def moveFiles(reportsDir: File, testReports: File, logFiles: List[File])(iteration: Int): Unit = {
     val iterationDir = new File(reportsDir, s"$iteration")
     if (iterationDir.exists()) {
@@ -124,10 +151,16 @@ object FlakyCommand {
   }
 }
 
-sealed trait FlakyArgs
+sealed trait ConditionArgs
 
-case class Times(count: Int) extends FlakyArgs
+case class Times(count: Int) extends ConditionArgs
 
-case class Duration(duration: Long) extends FlakyArgs
+case class Duration(duration: Long) extends ConditionArgs
 
-case object FirstFailure extends FlakyArgs
+case object FirstFailure extends ConditionArgs
+
+sealed trait TestCaseArgs
+
+case class ByName(name: String) extends TestCaseArgs
+
+case object All extends TestCaseArgs

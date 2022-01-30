@@ -15,11 +15,11 @@ lazy val `sbt-flaky` =
     )
 
 
-organization := "pl.otrebski"
+organization := "PiotrBosak"
 
 name := "sbt-flaky"
 
-version := "0.15-SNAPSHOT"
+version := "0.0.2-SNAPSHOT"
 
 scalaVersion := "2.12.15"
 
