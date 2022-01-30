@@ -2,7 +2,6 @@ package flaky
 
 import java.io.File
 
-import flaky.history.{Git, History}
 import org.scalatest.{Matchers, WordSpec}
 import sbt.FileFilter
 
@@ -23,15 +22,12 @@ class FlakyCommandTest extends WordSpec with Unzip with Matchers {
         override def accept(pathname: File): Boolean = pathname.isDirectory
       }).map(_.getName)
 
-      val history = new History("Project x", new File("./src/test/resources/history8/"), new File(""), new File("."))
-      val historyReport1 = history.createHistoryReport()
+
       val timeDetails = TimeDetails(System.currentTimeMillis() - 9000000L, System.currentTimeMillis())
       val report = Flaky.createReport("Project X", timeDetails, dirs.toList, reportDir)
 
       unzip(zippedGitRepo, unzippedGitDir)
-      val git = Git(new File(unzippedGitDir, "gitrepo/"))
       val htmlReportDir = new File("./target/example-report")
-      FlakyCommand.createHtmlReports("Project x", report, Some(historyReport1), htmlReportDir, git, log)
 
       new File(htmlReportDir,"index.html").exists shouldBe true
       new File(htmlReportDir,"flaky-report.html").exists shouldBe true

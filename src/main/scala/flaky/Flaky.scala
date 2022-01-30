@@ -26,7 +26,7 @@ case class FailureDetails(message: String, ftype: String, stacktrace: String) {
   }
 
   def firstNonAssertStacktrace(): Option[String] = {
-    stacktrace
+    val a = stacktrace
       .lines
       .filter(_.startsWith("\tat"))
       .filter(!_.startsWith("\tat org.junit"))
@@ -35,7 +35,11 @@ case class FailureDetails(message: String, ftype: String, stacktrace: String) {
       .filter(!_.startsWith("\tat java."))
       .filter(!_.startsWith("\tat scala."))
       .filter(!_.startsWith("\tat akka."))
-      .find(_ => true)
+      .findAny()
+    if(a.isPresent)
+      Some(a.get())
+    else None
+
   }
 }
 
