@@ -1,0 +1,46 @@
+#+TITLE: Detecting flaky test with sbt
+
+* Introduction
+This is a fork of [[https://github.com/otrebski/sbt-flaky][sbt-flaky]] plugin that's compatible with sbt versions >=1.4.6
+This version removes features like sending reports to Slack and keeps only the basic functionality. It adds however the possibility to run a single test suite.
+The original project seems to be abandoned by now and this fork removes most of its functionality which is why I decided to keep the fork instead of trying to get this change merged.
+
+* Instalation
+
+Add this plugin to either project or global configuration
+#+BEGIN_SRC scala
+addSbtPlugin("com.github.PiotrBosak" % "sbt-flaky" % "0.1.0")
+#+END_SRC
+
+Enable the plugin in `build.sbt`
+#+BEGIN_SRC scala
+lazy val library = (project in file("."))
+  .enablePlugins(FlakyPlugin)
+
+#+END_SRC
+
+* Usage
+
+Run all tests 5 times:
+#+BEGIN_SRC scala
+sbt
+project myProjectWithTests
+flaky times=5 all
+#+END_SRC
+
+Run all tests for 50 minutes:
+#+BEGIN_SRC scala
+sbt
+project myProjectWithTests
+flaky duration=50 all
+#+END_SRC
+
+Run a single test suite until failure:
+#+BEGIN_SRC scala
+sbt
+project myProjectWithTests
+flaky firstFail name=MyTestSpec
+#+END_SRC
+** Note
+ - The plugin needs to be enabled for specific sbt project. Enabling it only for the root project is not sufficient.
+ - flaky command won't find tests that are not directly in the project it's being run from e.g. running it in the root project will not find tests present in its children.

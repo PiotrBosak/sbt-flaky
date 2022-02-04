@@ -39,7 +39,7 @@ object FlakyCommand {
         testOnlyKeys.toList.foldLeft(state) {
           case (state, key) =>
             val extracted = Project.extract(state)
-            extracted.runInputTask(key, regex, state)
+            extracted.runInputTask(key, " *" + regex, state)
               ._1
         }
       }
@@ -89,11 +89,6 @@ object FlakyCommand {
           (1 to i).map(_.toString).toList
       }
 
-      val testCases = args._2 match {
-        case ByName(name) => ???
-        case All => ???
-      }
-
       val name: String = Project.extract(state).get(sbt.Keys.name)
       val report: FlakyTestReport = Flaky.createReport(name, TimeDetails(start, System.currentTimeMillis()), iterationNames, flakyReportsDir)
 
@@ -134,8 +129,8 @@ object FlakyCommand {
       .examples("all")
       .map(_ => All)
 
-    val byName = (Space ~> "byName" ~> StringBasic)
-      .examples("byName=*MyTestSpec")
+    val byName = (Space ~> "name=" ~> StringBasic)
+      .examples("name=MyTestSpec")
       .map(s => ByName(s))
 
     byName | all
