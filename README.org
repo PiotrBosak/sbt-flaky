@@ -1,4 +1,4 @@
-#+TITLE: Detecting flaky test with sbt
+#+TITLE: Detecting flaky tests with sbt
 
 * Introduction
 This is a fork of [[https://github.com/otrebski/sbt-flaky][sbt-flaky]] plugin that's compatible with sbt versions >=1.4.6
@@ -9,12 +9,12 @@ The original project seems to be abandoned by now and this fork removes most of 
 
 Add this plugin to either project or global configuration
 #+BEGIN_SRC scala
-addSbtPlugin("com.github.PiotrBosak" % "sbt-flaky" % "0.1.0")
+addSbtPlugin("io.github.piotrbosak" % "sbt-flaky" % "0.1.0")
 #+END_SRC
 
 Enable the plugin in `build.sbt`
 #+BEGIN_SRC scala
-lazy val library = (project in file("."))
+lazy val myModule = (project in file("."))
   .enablePlugins(FlakyPlugin)
 
 #+END_SRC

@@ -147,15 +147,10 @@ object FlakyCommand {
 }
 
 sealed trait ConditionArgs
-
 case class Times(count: Int) extends ConditionArgs
-
 case class Duration(duration: Long) extends ConditionArgs
-
 case object FirstFailure extends ConditionArgs
 
 sealed trait TestCaseArgs
-
 case class ByName(name: String) extends TestCaseArgs
-
 case object All extends TestCaseArgs

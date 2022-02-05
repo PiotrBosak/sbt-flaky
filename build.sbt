@@ -11,25 +11,34 @@ lazy val `sbt-flaky` =
         "org.scala-sbt" %% "scripted-plugin" % sbtVersion.value,
         "org.scalatest" %% "scalatest" % "3.0.1" % "test"
       ),
-      sbtPlugin := true
+      sbtPlugin := true,
+
     )
-
-
-organization := "io.github.piotrbosak"
-sonatypeProfileName := "io.github.piotrbosak"
-publishMavenStyle := true
 
 name := "sbt-flaky"
 
-version := "0.1.0"
+version := "0.2.1"
 
 scalaVersion := "2.12.15"
 
-credentials += Credentials(Path.userHome / ".sbt" / ".credentials")
 publishTo := sonatypePublishToBundle.value
 ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
-licenses += ("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0.html"))
+sonatypeProfileName := "io.github.piotrbosak"
+publishMavenStyle := true
+isSnapshot := false
 
+import sbt.url
+licenses := Seq("APL2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt"))
+homepage := Some(url("https://github.com/PiotrBosak/sbt-flaky"))
+scmInfo := Some(
+  ScmInfo(
+    url("https://github.com/PiotrBosak/sbt-flaky"),
+    "scm:git@github.com:PiotrBosak/sbt-flaky.git"
+  )
+)
+developers := List(
+  Developer(id = "PiotrBosak", name = "Piotr Bosak", email = "piotrebk8@gmail.com", url = url("https://piotrbosak.github.io"))
+)
 initialCommands in console :=
   """
     | println("Hello from console")
