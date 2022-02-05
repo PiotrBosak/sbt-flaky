@@ -36,9 +36,13 @@ scmInfo := Some(
     "scm:git@github.com:PiotrBosak/sbt-flaky.git"
   )
 )
+
+crossPaths := false
+
 developers := List(
   Developer(id = "PiotrBosak", name = "Piotr Bosak", email = "piotrebk8@gmail.com", url = url("https://piotrbosak.github.io"))
 )
+
 initialCommands in console :=
   """
     | println("Hello from console")
@@ -52,3 +56,19 @@ initialCommands in console :=
     | val flakyReportAllFailures: FlakyTestReport = Flaky.createReport("P1", TimeDetails(0, 100), List("1", "2", "3", "4", "5"), flakyReportDirAllFailures)
     |""".stripMargin
 
+import ReleaseTransformations._
+
+releaseCrossBuild := true
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies, // check that there are no SNAPSHOT dependencies
+  inquireVersions, // ask user to enter the current and next verion
+  runClean, // clean
+  setReleaseVersion, // set release version in version.sbt
+  commitReleaseVersion, // commit the release version
+  tagRelease, // create git tag
+  releaseStepCommandAndRemaining("+publishSigned"), // run +publishSigned command to sonatype stage release
+  setNextVersion, // set next version in version.sbt
+  commitNextVersion, // commint next version
+  releaseStepCommand("sonatypeRelease"), // run sonatypeRelease and publish to maven central
+  pushChanges // push changes to git
+)
