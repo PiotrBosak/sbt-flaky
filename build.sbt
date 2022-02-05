@@ -59,6 +59,7 @@ initialCommands in console :=
 import ReleaseTransformations._
 
 releaseCrossBuild := true
+releaseIgnoreUntrackedFiles := true
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies, // check that there are no SNAPSHOT dependencies
   inquireVersions, // ask user to enter the current and next verion
