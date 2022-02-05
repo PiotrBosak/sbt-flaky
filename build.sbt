@@ -15,22 +15,15 @@ lazy val `sbt-flaky` =
     )
 
 
-organization := "PiotrBosak"
+organization := "io.github.piotrbosak"
 
 name := "sbt-flaky"
 
-version := "0.0.2-SNAPSHOT"
+version := "0.1.0"
 
 scalaVersion := "2.12.15"
 
-
-publishMavenStyle := false
-
-bintrayOrganization := Some("kotrebski")
-
-bintrayPackageLabels := Seq("sbt", "flaky-test")
-
-bintrayRepository := "sbt-plugins"
+publishTo := Some("Sonatype Snapshots Nexus" at "https://s01.oss.sonatype.org")
 
 licenses += ("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0.html"))
 
