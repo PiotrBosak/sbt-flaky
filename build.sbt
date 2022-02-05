@@ -16,6 +16,8 @@ lazy val `sbt-flaky` =
 
 
 organization := "io.github.piotrbosak"
+sonatypeProfileName := "io.github.piotrbosak"
+publishMavenStyle := true
 
 name := "sbt-flaky"
 
@@ -24,8 +26,8 @@ version := "0.1.0"
 scalaVersion := "2.12.15"
 
 credentials += Credentials(Path.userHome / ".sbt" / ".credentials")
-publishTo := Some("Sonatype Snapshots Nexus" at "https://s01.oss.sonatype.org")
-
+publishTo := sonatypePublishToBundle.value
+ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
 licenses += ("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0.html"))
 
 initialCommands in console :=
