@@ -15,7 +15,7 @@ lazy val `sbt-flaky` =
 
     )
 
-name := "sbt-flaky"
+name := "sbt-flaky-test"
 
 scalaVersion := "2.12.15"
 
