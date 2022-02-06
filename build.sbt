@@ -16,6 +16,7 @@ lazy val `sbt-flaky` =
     )
 
 name := "sbt-flaky-test"
+organization := "io.github.piotrbosak."
 
 scalaVersion := "2.12.15"
 

@@ -153,4 +153,6 @@ case object FirstFailure extends ConditionArgs
 
 sealed trait TestCaseArgs
 case class ByName(name: String) extends TestCaseArgs
+
+
 case object All extends TestCaseArgs
