@@ -17,8 +17,6 @@ lazy val `sbt-flaky` =
 
 name := "sbt-flaky"
 
-version := "0.2.1"
-
 scalaVersion := "2.12.15"
 
 publishTo := sonatypePublishToBundle.value
