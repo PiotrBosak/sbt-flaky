@@ -9,7 +9,7 @@ The original project seems to be abandoned by now and this fork removes most of 
 
 Add this plugin to either project or global configuration
 #+BEGIN_SRC scala
-addSbtPlugin("io.github.piotrbosak" % "sbt-flaky" % "0.1.0")
+addSbtPlugin("io.github.piotrbosak" % "sbt-flaky" % "0.4.6")
 #+END_SRC
 
 Enable the plugin in `build.sbt`
